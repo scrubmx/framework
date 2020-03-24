@@ -351,6 +351,24 @@ class SupportStringableTest extends TestCase
         $this->assertSame(11, $this->stringable('foo bar baz')->length('UTF-8'));
     }
 
+    public function testLines()
+    {
+        $this->assertEquals(['foo', 'bar', 'baz'], $this->stringable("foo\nbar\rbaz")->lines()->all());
+        $this->assertEquals(['foo', 'bar', 'baz'], $this->stringable("foo\nbar\r\nbaz")->lines()->all());
+        $this->assertEquals(['foo', 'bar', 'baz'], $this->stringable("foo\nbar\r\nbaz\n")->lines()->all());
+        $this->assertEquals(['foo', 'bar', '', 'baz'], $this->stringable("foo\nbar\n\r\nbaz")->lines()->all());
+        $this->assertEquals(['foo', 'bar', 'baz', ''], $this->stringable("foo\nbar\r\nbaz\n\r")->lines()->all());
+        $this->assertEquals(['', 'foo', 'bar', 'baz', ''], $this->stringable("\nfoo\nbar\r\nbaz\n\r")->lines()->all());
+        $this->assertEquals(['foo', 'bar', 'baz'], $this->stringable("foo\fbar\vbaz")->lines()->all());
+        $this->assertEquals(['', 'foo', 'bar', 'baz'], $this->stringable("\x85foo\x0bbar\x0cbaz")->lines()->all());
+        $this->assertEquals(['', 'foo', 'bar', 'baz', ''], $this->stringable("\nfoo\nbar\r\nbaz\n\r")->lines(false)->all());
+        $this->assertEquals(["foo\n", "bar\r", "baz"], $this->stringable("foo\nbar\rbaz")->lines(true)->all());
+        $this->assertEquals(["foo\n", "bar\r\n", "baz\n"], $this->stringable("foo\nbar\r\nbaz\n")->lines(true)->all());
+        $this->assertEquals(["foo\f", "bar\v", "baz"], $this->stringable("foo\fbar\vbaz")->lines(true)->all());
+        $this->assertEquals(["\x0a", "foo\x0b", "bar\x0c", "baz\x85"], $this->stringable("\x0afoo\x0bbar\x0cbaz\x85")->lines(true)->all());
+        $this->assertEquals(["\n", "foo\n", "bar\r\n", "baz\n", "\r"], $this->stringable("\nfoo\nbar\r\nbaz\n\r")->lines(true)->all());
+    }
+
     public function testReplaceArray()
     {
         $this->assertSame('foo/bar/baz', (string) $this->stringable('?/?/?')->replaceArray('?', ['foo', 'bar', 'baz']));

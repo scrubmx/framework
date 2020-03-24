@@ -257,6 +257,25 @@ class Stringable
     }
 
     /**
+     * Break a string into lines splitting on any unicode newline sequence.
+     *
+     * @param  bool  $keepEnds
+     * @return \Illuminate\Support\Collection
+     */
+    public function lines($keepEnds = false)
+    {
+        $parts = preg_split('/(\R)/', $this->value, -1, $keepEnds ? PREG_SPLIT_DELIM_CAPTURE : 0);
+
+        if (trim(end($parts)) === '') {
+            array_pop($parts);
+        }
+
+        return collect($parts)->when($keepEnds, function ($parts) {
+            return $parts->chunk(2)->map->join('');
+        })->mapInto(static::class);
+    }
+
+    /**
      * Limit the number of characters in a string.
      *
      * @param  int  $limit
